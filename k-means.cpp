@@ -1,49 +1,48 @@
 //k-means.cpp
 #include <iostream>
 #include <cstring>
-#include <math.h>
+#include <cmath>
 
-#include "opencv2/core.hpp"
-#include "opencv2/imgproc.hpp"
-#include "opencv2/highgui.hpp"
+using namespace std;
 
-// create Point Struct
+// create Pt Struct
 typedef struct
 {
     float x;
     float y;
-    int label;
-} Point;
+    uint8_t label;
+} Pt;
 
-// Print point
-void printPt(Point A)
+// Print Pt
+void printPt(Pt A)
 {
     printf("x\ty\tlabel\n");
     printf("%.2f\t%.2f\t%d\n", A.x, A.y, A.label);
 }
 
-// Print point
-void printPt(Point* A, int n_data)
+// Print Pt
+void printPt(Pt* A, uint16_t n_data)
 {
     printf("x\ty\tlabel\n");
-    for(int i = 0; i < n_data; ++i)
+    for(size_t i = 0; i < n_data; ++i)
         printf("%.2f\t%.2f\t%d\n", A[i].x, A[i].y, A[i].label);
+    printf("\n");
 }
 
 // labelling
-void labelPoint(Point &data, int label)
+void labelPt(Pt &data, int label)
 {
     data.label = label;
 }
 
 // calculate Euclidean Distance
-float dist(Point p1, Point p2)
+float dist(Pt p1, Pt p2)
 {
     return sqrt(pow(p1.x - p2.x, 2) + pow(p1.y - p2.y, 2));
 }
 
 // calculate means
-float calcMean(float* data, int n_data)
+float calcMean(float* data, uint16_t n_data)
 {
     float sum = 0;
     for(int i; i < n_data; ++i)
@@ -53,12 +52,12 @@ float calcMean(float* data, int n_data)
     return sum/(float)n_data;
 }
 
-void bubbleSort(float* data, int* label, int n_data)
+void bubbleSort(float* data, uint8_t* label, uint16_t n_data)
 {
 	// do iteration
 	bool any_swap = true;
 	float temp;
-	int i = 0;
+	uint8_t i = 0;
 	while(true)
 	{
 		any_swap = false;
@@ -90,11 +89,11 @@ float absf(float x)
 }
 
 // calculate K-Means
-void kmeans(int k, Point* data, int n_data, Point* (&centroids))
+void kmeans(uint8_t k, Pt* data, uint16_t n_data, Pt* centroids)
 {
     // 2. calculate all distance between centroid and all samples
     float *distData = (float*)malloc(k*sizeof(float));
-    int *distIdx = (int*)malloc(k*sizeof(int));
+    uint8_t *distIdx = (uint8_t*)malloc(k*sizeof(uint8_t));
     float *sumX = (float*)malloc(k*sizeof(float));
     float *sumY = (float*)malloc(k*sizeof(float));
     float *numX = (float*)malloc(k*sizeof(float));
@@ -105,11 +104,11 @@ void kmeans(int k, Point* data, int n_data, Point* (&centroids))
     float oldCentroidsY[k];
 
     float difference = 0;
-    int vote = 0;
+    uint8_t vote = 0;
     bool done = false;
 
     while(!done)
-    {
+    { 
         // 2a. calculate each distance
         for(size_t i = 0; i < n_data; ++i)
         {
@@ -127,7 +126,7 @@ void kmeans(int k, Point* data, int n_data, Point* (&centroids))
         
             // 3. calculate mean of each centroids
             // 3a. sum all data each clusters
-            for(int jj = 0; jj < k; ++jj)
+            for(size_t jj = 0; jj < k; ++jj)
             {
                 if(data[i].label == jj)
                 {
@@ -142,15 +141,15 @@ void kmeans(int k, Point* data, int n_data, Point* (&centroids))
         }
 
         // 3b. calculate mean
-        for(int jj = 0; jj < k; ++jj)
+        for(size_t jj = 0; jj < k; ++jj)
         {
             meanCentroidsX[jj] = sumX[jj]/numX[jj];
             meanCentroidsY[jj] = sumY[jj]/numY[jj];
             // 4. determine new centroids
-            centroids[jj] = {meanCentroidsX[jj], meanCentroidsY[jj], jj};
+            centroids[jj] = {meanCentroidsX[jj], meanCentroidsY[jj], (uint8_t)jj};
         }
 
-        for(int jj = 0; jj < k; ++jj)
+        for(size_t jj = 0; jj < k; ++jj)
         {
             difference = oldCentroidsX[jj] - centroids[jj].x;
             if(absf(difference) < 0.00001)
@@ -166,8 +165,6 @@ void kmeans(int k, Point* data, int n_data, Point* (&centroids))
 
 
         printPt(centroids, k);
-        printf("\n");
-        getchar();
 
         if (vote == (k*2))
             done = true;
@@ -193,11 +190,11 @@ void kmeans(int k, Point* data, int n_data, Point* (&centroids))
 
 int main (int argc, char** argv)
 {
-    int n_data = 10;
-    int k = 2; //number of cluster
+    uint16_t n_data = 20;
+    uint8_t k = 2; //number of cluster
 
-    Point *samples = new Point[n_data];
-    Point *centroids = new Point[k];
+    Pt* samples = (Pt*)malloc(n_data*sizeof(Pt));
+    Pt* centroids = (Pt*)malloc(k*sizeof(Pt));
 
     samples[0] = {1.4, 2.6, 0};
     samples[1] = {3.1, 3.4, 0};
@@ -205,15 +202,25 @@ int main (int argc, char** argv)
     samples[3] = {3.7, 2.8, 0};
     samples[4] = {6.9, 7.5, 0};
     samples[5] = {7.5, 8.9, 0};
-    samples[6] = {23.8, 10, 0};
-    samples[7] = {5.2, 4.9, 0};
+    samples[6] = {23.8, 10., 0};
+    samples[7] = {5.2, 14.9, 0};
     samples[8] = {7.2, 8.3, 0};
     samples[9] = {8.4, 7.7, 0};
+    samples[10] = {34.4, 11.6, 0};
+    samples[11] = {6.1, 12.4, 0};
+    samples[12] = {13.4,15.3, 0};
+    samples[13] = {6.7, 15.8, 0};
+    samples[14] = {39.9, 12.5, 0};
+    samples[15] = {10.5, 16.9, 0};
+    samples[16] = {35.8, 30., 0};
+    samples[17] = {18.2, 22.9, 0};
+    samples[18] = {10.2, 32.3, 0};
+    samples[19] = {22.4, 33.7, 0};
 
     // 1. init centroids
-    for(int i = 0; i < k; ++i)
+    for(size_t i = 0; i < k; ++i)
     {
-        centroids[i] = {(float)i*10, (float)i*10, 0};
+        centroids[i] = {(float)i*30, (float)i*30, 0};
         centroids[i].label = i;
     }
     
@@ -229,5 +236,7 @@ int main (int argc, char** argv)
 
     printPt(samples, n_data);
 
+    free(centroids);
+    free(samples);
     return 0;
 }
